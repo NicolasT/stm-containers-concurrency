@@ -1,4 +1,4 @@
-module StmContainers.Multimap
+module StmContainers.Concurrency.Multimap
   ( Multimap,
     new,
     newIO,
@@ -20,9 +20,9 @@ module StmContainers.Multimap
 where
 
 import qualified Focus as C
-import qualified StmContainers.Map as A
-import StmContainers.Prelude hiding (delete, empty, foldM, insert, lookup, null, toList)
-import qualified StmContainers.Set as B
+import qualified StmContainers.Concurrency.Map as A
+import StmContainers.Concurrency.Prelude hiding (delete, empty, foldM, insert, lookup, null, toList)
+import qualified StmContainers.Concurrency.Set as B
 
 -- |
 -- A multimap, based on an STM-specialized hash array mapped trie.

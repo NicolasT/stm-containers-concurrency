@@ -1,7 +1,7 @@
 cabal-version: 3.0
-name:          stm-containers
+name:          stm-containers-concurrency
 version:       1.2.0.2
-synopsis:      Containers for STM
+synopsis:      Containers for STM, parametrized over MonadConc/MonadSTM
 description:
   This library is based on an STM-specialized implementation of
   Hash Array Mapped Trie.
@@ -12,19 +12,22 @@ description:
   .
   For details on performance of the library, which are a bit outdated, see
   <http://nikita-volkov.github.io/stm-containers/ this blog post>.
+  .
+  This is a friendly fork of the original stm-containers package to
+  make it work over the abstractions from the concurrency package.
 
 category:      Data Structures, STM, Concurrency
-homepage:      https://github.com/nikita-volkov/stm-containers
-bug-reports:   https://github.com/nikita-volkov/stm-containers/issues
+homepage:      https://github.com/NicolasT/stm-containers-concurrency
+bug-reports:   https://github.com/NicolasT/stm-containers-concurrency/issues
 author:        Nikita Volkov <nikita.y.volkov@mail.ru>
-maintainer:    Nikita Volkov <nikita.y.volkov@mail.ru>
+maintainer:    Nicolas Trangez <ikke@nicolast.be>
 copyright:     (c) 2014, Nikita Volkov
 license:       MIT
 license-file:  LICENSE
 
 source-repository head
   type:     git
-  location: git://github.com/nikita-volkov/stm-containers.git
+  location: git://github.com/NicolasT/stm-containers-concurrency.git
 
 library
   hs-source-dirs:     library
@@ -70,12 +73,12 @@ library
 
   default-language:   Haskell2010
   exposed-modules:
-    StmContainers.Bimap
-    StmContainers.Map
-    StmContainers.Multimap
-    StmContainers.Set
+    StmContainers.Concurrency.Bimap
+    StmContainers.Concurrency.Map
+    StmContainers.Concurrency.Multimap
+    StmContainers.Concurrency.Set
 
-  other-modules:      StmContainers.Prelude
+  other-modules:      StmContainers.Concurrency.Prelude
   build-depends:
     , base >=4.9 && <5
     , deferred-folds >=0.9 && <0.10
@@ -143,7 +146,7 @@ test-suite test
     , list-t
     , quickcheck-instances >=0.3.29.1 && <0.4
     , rerebase >=1 && <2
-    , stm-containers
+    , stm-containers-concurrency
     , tasty >=0.12 && <2
     , tasty-hunit >=0.10.0.3 && <0.11
     , tasty-quickcheck >=0.10.2 && <0.11

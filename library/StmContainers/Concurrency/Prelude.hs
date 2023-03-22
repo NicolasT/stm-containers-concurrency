@@ -1,4 +1,4 @@
-module StmContainers.Prelude
+module StmContainers.Concurrency.Prelude
   ( module Exports,
     modifyTVar',
     Product2 (..),

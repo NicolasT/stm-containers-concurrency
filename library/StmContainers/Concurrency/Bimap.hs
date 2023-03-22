@@ -1,4 +1,4 @@
-module StmContainers.Bimap
+module StmContainers.Concurrency.Bimap
   ( Bimap,
     new,
     newIO,
@@ -19,8 +19,8 @@ module StmContainers.Bimap
 where
 
 import qualified Focus as B
-import qualified StmContainers.Map as A
-import StmContainers.Prelude hiding (delete, empty, foldM, insert, lookup, null, toList)
+import qualified StmContainers.Concurrency.Map as A
+import StmContainers.Concurrency.Prelude hiding (delete, empty, foldM, insert, lookup, null, toList)
 
 -- |
 -- Bidirectional map.

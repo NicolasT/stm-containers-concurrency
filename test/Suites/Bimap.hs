@@ -2,7 +2,7 @@ module Suites.Bimap (tests) where
 
 import qualified Focus
 import qualified ListT
-import StmContainers.Bimap
+import StmContainers.Concurrency.Bimap
 import Test.Tasty
 import Test.Tasty.HUnit
 import Prelude

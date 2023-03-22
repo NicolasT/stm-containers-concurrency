@@ -5,7 +5,7 @@ import Control.Monad.Free
 import qualified Data.HashMap.Strict as HashMap
 import qualified DeferredFolds.UnfoldlM as UnfoldlM
 import qualified Focus
-import qualified StmContainers.Map as StmMap
+import qualified StmContainers.Concurrency.Map as StmMap
 import qualified Suites.Map.Update as Update
 import Test.QuickCheck.Instances ()
 import Test.Tasty

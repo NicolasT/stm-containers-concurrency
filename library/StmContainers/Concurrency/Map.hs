@@ -1,4 +1,4 @@
-module StmContainers.Map
+module StmContainers.Concurrency.Map
   ( Map,
     new,
     newIO,
@@ -16,7 +16,7 @@ where
 
 import qualified DeferredFolds.UnfoldlM as C
 import qualified Focus as B
-import StmContainers.Prelude hiding (delete, empty, foldM, insert, lookup, null, toList)
+import StmContainers.Concurrency.Prelude hiding (delete, empty, foldM, insert, lookup, null, toList)
 import qualified StmHamt.Hamt as A
 
 -- |

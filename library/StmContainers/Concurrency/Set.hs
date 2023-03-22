@@ -1,4 +1,4 @@
-module StmContainers.Set
+module StmContainers.Concurrency.Set
   ( Set,
     new,
     newIO,
@@ -15,7 +15,7 @@ module StmContainers.Set
 where
 
 import qualified Focus as B
-import StmContainers.Prelude hiding (delete, empty, foldM, insert, lookup, null, toList)
+import StmContainers.Concurrency.Prelude hiding (delete, empty, foldM, insert, lookup, null, toList)
 import qualified StmHamt.SizedHamt as A
 
 -- |
