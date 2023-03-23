@@ -28,14 +28,14 @@ import qualified StmContainers.Concurrency.Set as B
 -- A multimap, based on an STM-specialized hash array mapped trie.
 --
 -- Basically it's just a wrapper API around @'A.Map' key ('B.Set' value)@.
-newtype Multimap key value
-  = Multimap (A.Map key (B.Set value))
+newtype Multimap stm key value
+  = Multimap (A.Map stm key (B.Set stm value))
   deriving (Typeable)
 
 -- |
 -- Construct a new multimap.
 {-# INLINE new #-}
-new :: STM (Multimap key value)
+new :: MonadSTM stm => stm (Multimap stm key value)
 new =
   Multimap <$> A.new
 
@@ -45,14 +45,14 @@ new =
 -- This is useful for creating it on a top-level using 'unsafePerformIO',
 -- because using 'atomically' inside 'unsafePerformIO' isn't possible.
 {-# INLINE newIO #-}
-newIO :: IO (Multimap key value)
+newIO :: IO (Multimap STM key value)
 newIO =
   Multimap <$> A.newIO
 
 -- |
 -- Check on being empty.
 {-# INLINE null #-}
-null :: Multimap key value -> STM Bool
+null :: MonadSTM stm => Multimap stm key value -> stm Bool
 null (Multimap map) =
   A.null map
 
@@ -65,7 +65,7 @@ null (Multimap map) =
 -- which value we're focusing on and it doesn't make sense to replace it,
 -- however we still can decide wether to keep or remove it.
 {-# INLINE focus #-}
-focus :: (Hashable key, Hashable value) => C.Focus () STM result -> value -> key -> Multimap key value -> STM result
+focus :: (MonadSTM stm, Hashable key, Hashable value) => C.Focus () stm result -> value -> key -> Multimap stm key value -> stm result
 focus unitFocus@(Focus concealUnit _) value key (Multimap map) = A.focus setFocus key map
   where
     setFocus = C.Focus conceal reveal
@@ -88,21 +88,21 @@ focus unitFocus@(Focus concealUnit _) value key (Multimap map) = A.focus setFocu
 -- |
 -- Look up an item by a value and a key.
 {-# INLINE lookup #-}
-lookup :: (Hashable key, Hashable value) => value -> key -> Multimap key value -> STM Bool
+lookup :: (MonadSTM stm, Hashable key, Hashable value) => value -> key -> Multimap stm key value -> stm Bool
 lookup value key (Multimap m) =
   maybe (return False) (B.lookup value) =<< A.lookup key m
 
 -- |
 -- Look up all values by key.
 {-# INLINE lookupByKey #-}
-lookupByKey :: (Hashable key) => key -> Multimap key value -> STM (Maybe (B.Set value))
+lookupByKey :: (MonadSTM stm, Hashable key) => key -> Multimap stm key value -> stm (Maybe (B.Set stm value))
 lookupByKey key (Multimap m) =
   A.lookup key m
 
 -- |
 -- Insert an item.
 {-# INLINEABLE insert #-}
-insert :: (Hashable key, Hashable value) => value -> key -> Multimap key value -> STM ()
+insert :: (MonadSTM stm, Hashable key, Hashable value) => value -> key -> Multimap stm key value -> stm ()
 insert value key (Multimap map) = A.focus setFocus key map
   where
     setFocus = Focus conceal reveal
@@ -118,7 +118,7 @@ insert value key (Multimap map) = A.focus setFocus key map
 -- |
 -- Delete an item by a value and a key.
 {-# INLINEABLE delete #-}
-delete :: (Hashable key, Hashable value) => value -> key -> Multimap key value -> STM ()
+delete :: (MonadSTM stm, Hashable key, Hashable value) => value -> key -> Multimap stm key value -> stm ()
 delete value key (Multimap map) = A.focus setFocus key map
   where
     setFocus = Focus conceal reveal
@@ -132,14 +132,14 @@ delete value key (Multimap map) = A.focus setFocus key map
 -- |
 -- Delete all values associated with the key.
 {-# INLINEABLE deleteByKey #-}
-deleteByKey :: (Hashable key) => key -> Multimap key value -> STM ()
+deleteByKey :: (MonadSTM stm, Hashable key) => key -> Multimap stm key value -> stm ()
 deleteByKey key (Multimap map) =
   A.delete key map
 
 -- |
 -- Delete all the associations.
 {-# INLINE reset #-}
-reset :: Multimap key value -> STM ()
+reset :: MonadSTM stm => Multimap stm key value -> stm ()
 reset (Multimap map) =
   A.reset map
 
@@ -147,36 +147,36 @@ reset (Multimap map) =
 -- Stream associations actively.
 --
 -- Amongst other features this function provides an interface to folding.
-unfoldlM :: Multimap key value -> UnfoldlM STM (key, value)
+unfoldlM :: MonadSTM stm => Multimap stm key value -> UnfoldlM stm (key, value)
 unfoldlM (Multimap m) =
   A.unfoldlM m >>= \(key, s) -> (key,) <$> B.unfoldlM s
 
 -- |
 -- Stream keys actively.
-unfoldlMKeys :: Multimap key value -> UnfoldlM STM key
+unfoldlMKeys :: MonadSTM stm => Multimap stm key value -> UnfoldlM stm key
 unfoldlMKeys (Multimap m) =
   fmap fst (A.unfoldlM m)
 
 -- |
 -- Stream values by a key actively.
-unfoldlMByKey :: (Hashable key) => key -> Multimap key value -> UnfoldlM STM value
+unfoldlMByKey :: (MonadSTM stm, Hashable key) => key -> Multimap stm key value -> UnfoldlM stm value
 unfoldlMByKey key (Multimap m) =
   lift (A.lookup key m) >>= maybe mempty B.unfoldlM
 
 -- |
 -- Stream associations passively.
-listT :: Multimap key value -> ListT STM (key, value)
+listT :: Multimap STM key value -> ListT STM (key, value)
 listT (Multimap m) =
   A.listT m >>= \(key, s) -> (key,) <$> B.listT s
 
 -- |
 -- Stream keys passively.
-listTKeys :: Multimap key value -> ListT STM key
+listTKeys :: Multimap STM key value -> ListT STM key
 listTKeys (Multimap m) =
   fmap fst (A.listT m)
 
 -- |
 -- Stream values by a key passively.
-listTByKey :: (Hashable key) => key -> Multimap key value -> ListT STM value
+listTByKey :: (Hashable key) => key -> Multimap STM key value -> ListT STM value
 listTByKey key (Multimap m) =
   lift (A.lookup key m) >>= maybe mempty B.listT

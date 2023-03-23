@@ -9,6 +9,7 @@ import Control.Applicative as Exports
 import Control.Arrow as Exports
 import Control.Category as Exports
 import Control.Concurrent as Exports
+import Control.Concurrent.Classy.STM as Exports (MonadSTM, TVar, readTVar, writeTVar)
 import Control.Exception as Exports
 import Control.Monad as Exports hiding (forM, forM_, mapM, mapM_, msum, sequence, sequence_)
 import Control.Monad.Fix as Exports hiding (fix)
@@ -52,7 +53,7 @@ import Foreign.ForeignPtr as Exports
 import Foreign.Ptr as Exports
 import Foreign.StablePtr as Exports
 import Foreign.Storable as Exports hiding (alignment, sizeOf)
-import GHC.Conc as Exports hiding (threadWaitRead, threadWaitReadSTM, threadWaitWrite, threadWaitWriteSTM, withMVar)
+import GHC.Conc as Exports (STM)
 import GHC.Exts as Exports (groupWith, inline, lazy, sortWith)
 import GHC.Generics as Exports (Generic)
 import GHC.IO.Exception as Exports
@@ -74,7 +75,7 @@ import Prelude as Exports hiding (all, and, any, concat, concatMap, elem, foldl,
 
 -- | Strict version of 'modifyTVar'.
 {-# INLINE modifyTVar' #-}
-modifyTVar' :: TVar a -> (a -> a) -> STM ()
+modifyTVar' :: MonadSTM stm => TVar stm a -> (a -> a) -> stm ()
 modifyTVar' var f = do
   x <- readTVar var
   writeTVar var $! f x

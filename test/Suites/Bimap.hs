@@ -10,30 +10,30 @@ import Prelude
 tests :: [TestTree]
 tests =
   [ testCase "construction" $ do
-      m <- newIO :: IO (Bimap Int Int)
+      m <- newIO :: IO (Bimap STM Int Int)
       atomically $ insertRight 3 1 m
       atomically $ insertRight 4 2 m
       assertEqual "" [(3, 1), (4, 2)] =<< atomically (ListT.toList (listT m)),
     testCase "deleteLeft" $ do
-      m <- newIO :: IO (Bimap Int Int)
+      m <- newIO :: IO (Bimap STM Int Int)
       atomically $ insertRight 3 1 m
       atomically $ insertRight 4 2 m
       atomically $ deleteLeft 4 m
       assertEqual "" [(3, 1)] =<< atomically (ListT.toList (listT m)),
     testCase "deleteRight" $ do
-      m <- newIO :: IO (Bimap Int Int)
+      m <- newIO :: IO (Bimap STM Int Int)
       atomically $ insertRight 3 1 m
       atomically $ insertRight 4 2 m
       atomically $ deleteRight 2 m
       assertEqual "" [(3, 1)] =<< atomically (ListT.toList (listT m)),
     testCase "replacing construction" $ do
-      m <- newIO :: IO (Bimap Int Int)
+      m <- newIO :: IO (Bimap STM Int Int)
       atomically $ insertRight 3 1 m
       atomically $ insertRight 4 2 m
       atomically $ insertRight 3 2 m
       assertEqual "" [(3, 2)] =<< atomically (ListT.toList (listT m)),
     testCase "insert overwrites" $ do
-      m <- newIO :: IO (Bimap Int Int)
+      m <- newIO :: IO (Bimap STM Int Int)
       atomically $ insertRight 3 1 m
       assertEqual "" 1 =<< atomically (size m)
       atomically $ insertRight 3 2 m
@@ -49,7 +49,7 @@ tests =
       assertEqual "" Nothing =<< atomically (lookupRight 2 m)
       assertEqual "" (Just 3) =<< atomically (lookupRight 4 m),
     testCase "insert overwrites 2" $ do
-      m <- newIO :: IO (Bimap Int Char)
+      m <- newIO :: IO (Bimap STM Int Char)
       atomically $ insertLeft 'a' 1 m
       assertEqual "" 1 =<< atomically (size m)
       atomically $ insertLeft 'a' 2 m

@@ -13,7 +13,7 @@ import Test.Tasty.HUnit
 import Test.Tasty.QuickCheck
 import Prelude hiding (choose)
 
-interpretStmMapUpdate :: (Hashable k) => Update.Update k v -> STM (StmMap.Map k v)
+interpretStmMapUpdate :: (Hashable k) => Update.Update k v -> STM (StmMap.Map STM k v)
 interpretStmMapUpdate update = do
   m <- StmMap.new
   flip iterM update $ \case
@@ -34,16 +34,16 @@ interpretHashMapUpdate update =
         Nothing -> m
         Just a -> HashMap.insert k (f a) m
 
-stmMapToHashMap :: (Hashable k) => StmMap.Map k v -> STM (HashMap.HashMap k v)
+stmMapToHashMap :: (Hashable k) => StmMap.Map STM k v -> STM (HashMap.HashMap k v)
 stmMapToHashMap = UnfoldlM.foldM (Foldl.generalize Foldl.hashMap) . StmMap.unfoldlM
 
-stmMapFromList :: (Hashable k) => [(k, v)] -> STM (StmMap.Map k v)
+stmMapFromList :: (Hashable k) => [(k, v)] -> STM (StmMap.Map STM k v)
 stmMapFromList list = do
   m <- StmMap.new
   forM_ list $ \(k, v) -> StmMap.insert v k m
   return m
 
-stmMapToList :: StmMap.Map k v -> STM [(k, v)]
+stmMapToList :: StmMap.Map STM k v -> STM [(k, v)]
 stmMapToList = UnfoldlM.foldM (Foldl.generalize Foldl.list) . StmMap.unfoldlM
 
 -- * Intentional hash collision simulation

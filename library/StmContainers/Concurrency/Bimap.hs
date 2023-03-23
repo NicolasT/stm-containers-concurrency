@@ -28,14 +28,14 @@ import StmContainers.Concurrency.Prelude hiding (delete, empty, foldM, insert, l
 --
 -- For one value of the left-hand type this map contains one value
 -- of the right-hand type and vice versa.
-data Bimap leftKey rightKey
-  = Bimap !(A.Map leftKey rightKey) !(A.Map rightKey leftKey)
+data Bimap stm leftKey rightKey
+  = Bimap !(A.Map stm leftKey rightKey) !(A.Map stm rightKey leftKey)
   deriving (Typeable)
 
 -- |
 -- Construct a new bimap.
 {-# INLINE new #-}
-new :: STM (Bimap leftKey rightKey)
+new :: MonadSTM stm => stm (Bimap stm leftKey rightKey)
 new =
   Bimap <$> A.new <*> A.new
 
@@ -45,21 +45,21 @@ new =
 -- This is useful for creating it on a top-level using 'unsafePerformIO',
 -- because using 'atomically' inside 'unsafePerformIO' isn't possible.
 {-# INLINE newIO #-}
-newIO :: IO (Bimap leftKey rightKey)
+newIO :: IO (Bimap STM leftKey rightKey)
 newIO =
   Bimap <$> A.newIO <*> A.newIO
 
 -- |
 -- Check on being empty.
 {-# INLINE null #-}
-null :: Bimap leftKey rightKey -> STM Bool
+null :: MonadSTM stm => Bimap stm leftKey rightKey -> stm Bool
 null (Bimap leftMap _) =
   A.null leftMap
 
 -- |
 -- Get the number of elements.
 {-# INLINE size #-}
-size :: Bimap leftKey rightKey -> STM Int
+size :: MonadSTM stm => Bimap stm leftKey rightKey -> stm Int
 size (Bimap leftMap _) =
   A.size leftMap
 
@@ -71,7 +71,7 @@ size (Bimap leftMap _) =
 -- E.g., you can look up an item and delete it at the same time,
 -- or update it and return the new value.
 {-# INLINE focusLeft #-}
-focusLeft :: (Hashable leftKey, Hashable rightKey) => B.Focus rightKey STM result -> leftKey -> Bimap leftKey rightKey -> STM result
+focusLeft :: (MonadSTM stm, Hashable leftKey, Hashable rightKey) => B.Focus rightKey stm result -> leftKey -> Bimap stm leftKey rightKey -> stm result
 focusLeft rightFocus leftKey (Bimap leftMap rightMap) =
   do
     ((output, change), maybeRightKey) <- A.focus (B.extractingInput (B.extractingChange rightFocus)) leftKey leftMap
@@ -95,42 +95,42 @@ focusLeft rightFocus leftKey (Bimap leftMap rightMap) =
 -- E.g., you can look up an item and delete it at the same time,
 -- or update it and return the new value.
 {-# INLINE focusRight #-}
-focusRight :: (Hashable leftKey, Hashable rightKey) => B.Focus leftKey STM result -> rightKey -> Bimap leftKey rightKey -> STM result
+focusRight :: (MonadSTM stm, Hashable leftKey, Hashable rightKey) => B.Focus leftKey stm result -> rightKey -> Bimap stm leftKey rightKey -> stm result
 focusRight valueFocus2 rightKey (Bimap leftMap rightMap) =
   focusLeft valueFocus2 rightKey (Bimap rightMap leftMap)
 
 -- |
 -- Look up a right value by the left value.
 {-# INLINE lookupLeft #-}
-lookupLeft :: (Hashable leftKey) => leftKey -> Bimap leftKey rightKey -> STM (Maybe rightKey)
+lookupLeft :: (MonadSTM stm, Hashable leftKey) => leftKey -> Bimap stm leftKey rightKey -> stm (Maybe rightKey)
 lookupLeft leftKey (Bimap leftMap _) =
   A.lookup leftKey leftMap
 
 -- |
 -- Look up a left value by the right value.
 {-# INLINE lookupRight #-}
-lookupRight :: (Hashable rightKey) => rightKey -> Bimap leftKey rightKey -> STM (Maybe leftKey)
+lookupRight :: (MonadSTM stm, Hashable rightKey) => rightKey -> Bimap stm leftKey rightKey -> stm (Maybe leftKey)
 lookupRight rightKey (Bimap _ rightMap) =
   A.lookup rightKey rightMap
 
 -- |
 -- Insert the association by the left value.
 {-# INLINE insertLeft #-}
-insertLeft :: (Hashable leftKey, Hashable rightKey) => rightKey -> leftKey -> Bimap leftKey rightKey -> STM ()
+insertLeft :: (MonadSTM stm, Hashable leftKey, Hashable rightKey) => rightKey -> leftKey -> Bimap stm leftKey rightKey -> stm ()
 insertLeft rightKey =
   focusLeft (B.insert rightKey)
 
 -- |
 -- Insert the association by the right value.
 {-# INLINE insertRight #-}
-insertRight :: (Hashable leftKey, Hashable rightKey) => leftKey -> rightKey -> Bimap leftKey rightKey -> STM ()
+insertRight :: (MonadSTM stm, Hashable leftKey, Hashable rightKey) => leftKey -> rightKey -> Bimap stm leftKey rightKey -> stm ()
 insertRight leftKey rightKey (Bimap leftMap rightMap) =
   insertLeft leftKey rightKey (Bimap rightMap leftMap)
 
 -- |
 -- Delete the association by the left value.
 {-# INLINE deleteLeft #-}
-deleteLeft :: (Hashable leftKey, Hashable rightKey) => leftKey -> Bimap leftKey rightKey -> STM ()
+deleteLeft :: (MonadSTM stm, Hashable leftKey, Hashable rightKey) => leftKey -> Bimap stm leftKey rightKey -> stm ()
 deleteLeft leftKey (Bimap leftMap rightMap) =
   A.focus B.lookupAndDelete leftKey leftMap
     >>= mapM_ (\rightKey -> A.delete rightKey rightMap)
@@ -138,14 +138,14 @@ deleteLeft leftKey (Bimap leftMap rightMap) =
 -- |
 -- Delete the association by the right value.
 {-# INLINE deleteRight #-}
-deleteRight :: (Hashable leftKey, Hashable rightKey) => rightKey -> Bimap leftKey rightKey -> STM ()
+deleteRight :: (MonadSTM stm, Hashable leftKey, Hashable rightKey) => rightKey -> Bimap stm leftKey rightKey -> stm ()
 deleteRight rightKey (Bimap leftMap rightMap) =
   deleteLeft rightKey (Bimap rightMap leftMap)
 
 -- |
 -- Delete all the associations.
 {-# INLINE reset #-}
-reset :: Bimap leftKey rightKey -> STM ()
+reset :: MonadSTM stm => Bimap stm leftKey rightKey -> stm ()
 reset (Bimap leftMap rightMap) =
   do
     A.reset leftMap
@@ -156,13 +156,13 @@ reset (Bimap leftMap rightMap) =
 --
 -- Amongst other features this function provides an interface to folding.
 {-# INLINE unfoldlM #-}
-unfoldlM :: Bimap leftKey rightKey -> UnfoldlM STM (leftKey, rightKey)
+unfoldlM :: MonadSTM stm => Bimap stm leftKey rightKey -> UnfoldlM stm (leftKey, rightKey)
 unfoldlM (Bimap leftMap _) =
   A.unfoldlM leftMap
 
 -- |
 -- Stream the associations passively.
 {-# INLINE listT #-}
-listT :: Bimap key value -> ListT STM (key, value)
+listT :: Bimap STM key value -> ListT STM (key, value)
 listT (Bimap leftMap _) =
   A.listT leftMap
