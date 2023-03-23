@@ -37,7 +37,7 @@ new =
 -- This is useful for creating it on a top-level using 'unsafePerformIO',
 -- because using 'atomically' inside 'unsafePerformIO' isn't possible.
 {-# INLINEABLE newIO #-}
-newIO :: IO (Map STM key value)
+newIO :: MonadConc m => m (Map (STM m) key value)
 newIO =
   Map <$> A.newIO
 
@@ -110,6 +110,6 @@ unfoldlM (Map hamt) =
 -- |
 -- Stream the associations passively.
 {-# INLINE listT #-}
-listT :: Map STM key value -> ListT STM (key, value)
+listT :: Map (STM IO) key value -> ListT (STM IO) (key, value)
 listT (Map hamt) =
   fmap (\(Product2 k v) -> (k, v)) (A.listT hamt)

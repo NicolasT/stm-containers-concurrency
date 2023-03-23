@@ -45,7 +45,7 @@ new =
 -- This is useful for creating it on a top-level using 'unsafePerformIO',
 -- because using 'atomically' inside 'unsafePerformIO' isn't possible.
 {-# INLINE newIO #-}
-newIO :: IO (Multimap STM key value)
+newIO :: MonadConc m => m (Multimap (STM m) key value)
 newIO =
   Multimap <$> A.newIO
 
@@ -165,18 +165,18 @@ unfoldlMByKey key (Multimap m) =
 
 -- |
 -- Stream associations passively.
-listT :: Multimap STM key value -> ListT STM (key, value)
+listT :: Multimap (STM IO) key value -> ListT (STM IO) (key, value)
 listT (Multimap m) =
   A.listT m >>= \(key, s) -> (key,) <$> B.listT s
 
 -- |
 -- Stream keys passively.
-listTKeys :: Multimap STM key value -> ListT STM key
+listTKeys :: Multimap (STM IO) key value -> ListT (STM IO) key
 listTKeys (Multimap m) =
   fmap fst (A.listT m)
 
 -- |
 -- Stream values by a key passively.
-listTByKey :: (Hashable key) => key -> Multimap STM key value -> ListT STM value
+listTByKey :: (Hashable key) => key -> Multimap (STM IO) key value -> ListT (STM IO) value
 listTByKey key (Multimap m) =
   lift (A.lookup key m) >>= maybe mempty B.listT

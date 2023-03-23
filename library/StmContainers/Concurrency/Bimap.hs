@@ -45,7 +45,7 @@ new =
 -- This is useful for creating it on a top-level using 'unsafePerformIO',
 -- because using 'atomically' inside 'unsafePerformIO' isn't possible.
 {-# INLINE newIO #-}
-newIO :: IO (Bimap STM leftKey rightKey)
+newIO :: MonadConc m => m (Bimap (STM m) leftKey rightKey)
 newIO =
   Bimap <$> A.newIO <*> A.newIO
 
@@ -163,6 +163,6 @@ unfoldlM (Bimap leftMap _) =
 -- |
 -- Stream the associations passively.
 {-# INLINE listT #-}
-listT :: Bimap STM key value -> ListT STM (key, value)
+listT :: Bimap (STM IO) key value -> ListT (STM IO) (key, value)
 listT (Bimap leftMap _) =
   A.listT leftMap

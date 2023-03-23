@@ -3,4 +3,4 @@ packages: .
 source-repository-package
   type: git
   location: https://github.com/NicolasT/stm-hamt-concurrency.git
-  tag: 27e868d4fb8bd95899236df9eb071d490c7ef95d
+  tag: fac0943d653a4d59988f667ba2429238a412dbd2

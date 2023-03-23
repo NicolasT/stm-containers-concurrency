@@ -37,7 +37,7 @@ new =
 -- This is useful for creating it on a top-level using 'unsafePerformIO',
 -- because using 'atomically' inside 'unsafePerformIO' isn't possible.
 {-# INLINEABLE newIO #-}
-newIO :: IO (Set STM item)
+newIO :: MonadConc m => m (Set (STM m) item)
 newIO =
   Set <$> A.newIO
 
@@ -111,6 +111,6 @@ unfoldlM (Set hamt) =
 -- |
 -- Stream the elements passively.
 {-# INLINE listT #-}
-listT :: Set STM item -> ListT STM item
+listT :: Set (STM IO) item -> ListT (STM IO) item
 listT (Set hamt) =
   A.listT hamt
